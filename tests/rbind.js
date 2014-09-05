@@ -1,7 +1,7 @@
 /*global describe, it */
 "use strict";
 require('chai').should();
-var ITSA = require("lang-ext");
+var ITSA = require("../lang-ext");
 
 describe('Testing function instance methods', function () {
     var func = function() {

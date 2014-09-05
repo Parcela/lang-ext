@@ -1,7 +1,7 @@
 /*global describe, it */
 "use strict";
 var expect = require('chai').expect;
-require("lang-ext");
+require("../lang-ext");
 
 describe('Testing object instance methods', function () {
 	var obj = {a:1, b:2, c:3};
