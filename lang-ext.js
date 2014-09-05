@@ -54,12 +54,12 @@ Pollyfils for often used functionality for objects
 		}
 	};
 	// -------------------
-	var	_each = function (fn, context) {
+	var _each = function (fn, context) {
 		var keys = Object.keys(this),
 			l = keys.length,
 			i = -1,
 			key;
-		while(++i < l) {
+		while (++i < l) {
 			key = keys[i];
 			fn.call(context, this[key], key, this);
 		}
@@ -79,15 +79,15 @@ Pollyfils for often used functionality for objects
 		 *                      key {string} name of the property
 		 *                      obj {Object} the whole of the object
 		 * @chainable
-		*/
+		 */
 
-		each: function(fn, context) {
+		each: function (fn, context) {
 			if (context) return _each(fn, context);
 			var keys = Object.keys(this),
 				l = keys.length,
 				i = -1,
 				key;
-			while(++i < l) {
+			while (++i < l) {
 				key = keys[i];
 				fn(this[key], key, this);
 			}
@@ -107,13 +107,13 @@ Pollyfils for often used functionality for objects
 		 *                      key {string} name of the property
 		 *                      obj {Object} the whole of the object
 		 * @return {Boolean} true if the loop was interrupted by the callback function returning *truish*.
-		*/
+		 */
 		some: function (fn, context) {
 			var keys = Object.keys(this),
 				l = keys.length,
 				i = -1,
 				key;
-			while(++i < l) {
+			while (++i < l) {
 				key = keys[i];
 				if (fn.call(context, this[key], key, this)) {
 					return true;
@@ -131,21 +131,21 @@ Pollyfils for often used functionality for objects
 		 * The callback is provided with the value of the property, the name of the property
 		 * and a reference to the whole object itself.
 		 * The context to run the callback in can be overriden, otherwise it is undefined.
-         *
+		 *
 		 * @method map
 		 * @param fn {Function} Function to be executed on each item in the object.  It will receive
 		 *                      value {any} value of the property
 		 *                      key {string} name of the property
 		 *                      obj {Object} the whole of the object
 		 * @return {Object} The new object with its properties set to the values returned by the callback function.
-		*/
+		 */
 		map: function (fn, context) {
 			var keys = Object.keys(this),
 				l = keys.length,
 				i = -1,
 				m = {},
 				val, key;
-			while(++i < l) {
+			while (++i < l) {
 				key = keys[i];
 				val = fn.call(context, this[key], key, this);
 				if (val !== undefined) {
@@ -159,7 +159,7 @@ Pollyfils for often used functionality for objects
 		 *
 		 * @method keys
 		 * @return {Array} Keys of the object
-		*/
+		 */
 		keys: function () {
 			return Object.keys(this);
 		},
@@ -169,14 +169,14 @@ Pollyfils for often used functionality for objects
 		 *
 		 * @method values
 		 * @return {Array} values of the object
-		*/
+		 */
 		values: function () {
 			var keys = Object.keys(this),
 				i = -1,
 				len = keys.length,
 				values = [];
 
-			while(++i < len) {
+			while (++i < len) {
 				values.push(this[keys[i]]);
 			}
 
@@ -203,14 +203,14 @@ Pollyfils for often used functionality for objects
 		 *
 		 * @method shallowClone
 		 * @return {Object} shallow copy of the original
-		*/
+		 */
 		shallowClone: function () {
 			var m = {},
 				keys = Object.keys(this),
 				l = keys.length,
 				i = -1,
 				key;
-			while(++i < l) {
+			while (++i < l) {
 				key = keys[i];
 				m[key] = this[key];
 			}
@@ -227,7 +227,7 @@ Pollyfils for often used functionality for objects
 		 * @param forceAssign {Boolean} If true, the properties in `obj` will override those of the same name
 		 *        in the original object
 		 * @chainable
-		*/
+		 */
 		merge: function (obj, forceAssign) {
 			var m = this;
 			if (obj && obj.each) obj.each(function (value, key) {
@@ -247,18 +247,18 @@ Pollyfils for often used functionality for objects
 	 * The copying is shallow, complex properties will reference the very same object.
 	 * Properties in later objects do **not overwrite** properties of the same name in earlier objects.
 	 * If any of the objects is missing, it will be skiped.
-     *
+	 *
 	 * @example
-     *
+	 *
 	 * 	var foo = function (config) {
 	 * 		 config = Object.merge(config, defaultConfig);
 	 * 	}
-     *
+	 *
 	 * @method merge
 	 * @static
 	 * @param obj* {Object} Objects whose properties are to be merged
 	 * @return {Object} new object with the properties merged in.
-	*/
+	 */
 	Object.merge = function () {
 		var m = {};
 		Array.prototype.forEach.call(arguments, function (obj) {
@@ -270,13 +270,13 @@ Pollyfils for often used functionality for objects
 	defineProperties(Function.prototype, {
 		/**
 		 * Merges the given map of properties into the `prototype` of the Class.
-         * Not to be used on instances.
-         *
+		 * Not to be used on instances.
+		 *
 		 * @method mergePrototypes
 		 * @param map {Object} Hash map of properties to add to the prototype of this object
 		 * @param forceAssign {Boolean}  If true, it will override any existing property by the same name
 		 * @chainable
-		*/
+		 */
 		mergePrototypes: function (map, forceAssign) {
 			defineProperties(this.prototype, map, forceAssign);
 			return this;
@@ -305,13 +305,13 @@ Pollyfils for often used functionality for objects
 		 * 			}
 		 * 		}
 		 * 	);
-         *
+		 *
 		 * @method subClass
 		 * @param [constructor] {Function} The function that will serve as constructor for the new class.
 		 *        If `undefined` defaults to `Object.constructor`
 		 * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
 		 * @return the new class.
-		*/
+		 */
 		subClass: function (constructor, prototypes) {
 			var create = function () {
 				function F() {}
@@ -367,7 +367,7 @@ Pollyfils for often used functionality for objects
 		 *        arguments collection supplied to the function.
 		 * @return {function} the wrapped function.
 		 */
-		rbind: function(context /*, args* */) {
+		rbind: function (context /*, args* */ ) {
 			var thisFunction = this,
 				arrayArgs,
 				slice = Array.prototype.slice;
@@ -378,11 +378,11 @@ Pollyfils for often used functionality for objects
 			}
 
 			return (arrayArgs ?
-				function() {
+				function () {
 					// over here, `arguments` will be the "new" arguments when the final function is called!
 					return thisFunction.apply(context, slice.call(arguments, 0).concat(arrayArgs));
-				}:
-				function() {
+				} :
+				function () {
 					// over here, `arguments` will be the "new" arguments when the final function is called!
 					return thisFunction.apply(context, arguments);
 				}
