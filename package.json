@@ -1,0 +1,48 @@
+{
+	"name": "Parcela-lang-ext",
+	"version": "0.1.0",
+	"description": "Parcela's language extensions",
+	"author": {
+		"name": "Daniel Barreiro",
+		"email": "devasatyam@gmail.com"
+	},
+	"licenses": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Parcela/lang-ext"
+	},
+	"bugs": {
+		"url": "https://github.com/Parcela/lang-ext/issues"
+	},
+	"keywords": [
+		"Parcela",
+		"parcel"
+	],
+	"main": "lang-ext.js",
+	"devDependencies": {
+		"chai": "^1.9.1",
+		"istanbul": "^0.3.0",
+		"jshint": "^2.5.5",
+		"mocha": "^1.21.4"
+	},
+	"engines": {
+		"node": "*"
+	},
+	"scripts": {
+		"pretest": "jshint ./lang-ext.js",
+		"test": "mocha tests/*.js  && istanbul cover $(which _mocha) -- tests/*.js",
+		"lint": "jshint ./lang-ext.js"
+	},
+	"homepage": "http://Parcela.github.io",
+	"maintainers": [
+		{
+			"name": "Daniel Barreiro",
+			"email": "devasatyam@gmail.com"
+    	},
+		{
+			"name": "Marco Asbreuk",
+			"email": "marco@itsasbreuk.nl"
+    	}
+  	]
+
+}
