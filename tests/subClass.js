@@ -1,7 +1,7 @@
 /*global describe, it */
 "use strict";
 var expect = require('chai').expect;
-require("lang-ext");
+require("../lang-ext");
 
 // Shape - superclass
 //function Shape(x, y) {
