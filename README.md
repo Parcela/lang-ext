@@ -2,6 +2,7 @@ JavaScript Language extensions
 ========
 
 [![Build Status](https://travis-ci.org/Parcela/lang-ext.svg?branch=master)](https://travis-ci.org/Parcela/lang-ext)
+
 [![browser support](https://ci.testling.com/Parcela/lang-ext.png)](https://ci.testling.com/Parcela/lang-ext)
 
 
