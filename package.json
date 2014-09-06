@@ -33,6 +33,21 @@
 		"test": "mocha tests/*.js  && istanbul cover $(which _mocha) -- tests/*.js",
 		"lint": "jshint ./lang-ext.js"
 	},
+	"testling": {
+		"harness": "mocha",
+		"files": "tests/*.js",
+		"browsers": [
+			"ie/6..latest",
+			"chrome/22..latest",
+			"firefox/16..latest",
+			"safari/latest",
+			"opera/11.0..latest",
+			"iphone/6",
+			"ipad/6",
+			"android-browser/latest"
+		]
+	},
+
 	"homepage": "http://Parcela.github.io",
 	"maintainers": [
 		{
