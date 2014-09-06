@@ -54,16 +54,16 @@ Pollyfils for often used functionality for objects
 		}
 	};
 	// -------------------
-	var _each = function (fn, context) {
-		var keys = Object.keys(this),
+	var _each = function (obj, fn, context) {
+		var keys = Object.keys(obj),
 			l = keys.length,
 			i = -1,
 			key;
 		while (++i < l) {
 			key = keys[i];
-			fn.call(context, this[key], key, this);
+			fn.call(context, obj[key], key, obj);
 		}
-		return this;
+		return obj;
 	};
 
 	defineProperties(ObjectPrototype, {
@@ -82,7 +82,7 @@ Pollyfils for often used functionality for objects
 		 */
 
 		each: function (fn, context) {
-			if (context) return _each(fn, context);
+			if (context) return _each(this, fn, context);
 			var keys = Object.keys(this),
 				l = keys.length,
 				i = -1,

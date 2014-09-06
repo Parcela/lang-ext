@@ -12,8 +12,39 @@ describe('Testing object instance methods', function () {
 		});
 		expect(a).be.equal('1a2b3c');
 	});
+	it('each w/ context', function () {
+		var A = Object.createClass(function() {
+			this.count = 0;
+		},{
+			go: function () {
+				obj.each(function (item, key) {
+					this.count++;
+				}, this);
+			}
+		});
+		var a = new A();
+		a.go();
+		expect(a.count).eql(3);
+   });
+	it('some', function () {
+		var count = 0;
+		expect(obj.some(function (item, key) {
+			count++;
+			return item === key;
+		})).to.be.false;
+		expect(count).eql(3);
+		count = 0;
+		expect({a:1,b:'b',c:3}.some(function (item, key) {
+			count++;
+			return item === key;
+		})).to.be.true;
+		expect(count).eql(2);
+	});
 	it('keys', function () {
 		expect(obj.keys()).be.eql(Object.keys(obj));
+	});
+	it('values', function () {
+		expect(obj.values()).eql([1,2,3]);
 	});
 	it('isEmpty', function () {
 		expect(obj.isEmpty()).be.false;
