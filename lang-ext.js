@@ -1,48 +1,27 @@
 /**
-Pollyfils for often used functionality for objects
+Pollyfils for often used functionality for objects and Functions
 @module Object
 */
-/**
-Pollyfils for often used functionality for objects
-@class Object
-*/
+
 (function () {
 	"use strict";
 	// This from es5-shim
 	// https://github.com/es-shims/es5-shim
 	var ObjectPrototype = Object.prototype;
-	var supportsDescriptors = Object.defineProperty && (function () {
-		try {
-			Object.defineProperty({}, 'x', {});
-			return true;
-		} catch (e) { /* this is ES3 */
-			return false;
-		}
-	}());
 
 	// Define configurable, writable and non-enumerable props
 	// if they don't exist.
-	var defineProperty;
-	if (supportsDescriptors) {
-		defineProperty = function (object, name, method, forceAssign) {
-			if (!forceAssign && (name in object)) {
-				return;
-			}
-			Object.defineProperty(object, name, {
-				configurable: true,
-				enumerable: false,
-				writable: true,
-				value: method
-			});
-		};
-	} else {
-		defineProperty = function (object, name, method, forceAssign) {
-			if (!forceAssign && (name in object)) {
-				return;
-			}
-			object[name] = method;
-		};
-	}
+	var defineProperty = function (object, name, method, forceAssign) {
+		if (!forceAssign && (name in object)) {
+			return;
+		}
+		Object.defineProperty(object, name, {
+			configurable: true,
+			enumerable: false,
+			writable: true,
+			value: method
+		});
+	};
 	var defineProperties = function (object, map, forceAssign) {
 		var names = Object.keys(map),
 			l = names.length,
@@ -65,7 +44,10 @@ Pollyfils for often used functionality for objects
 		}
 		return obj;
 	};
-
+/**
+Pollyfils for often used functionality for objects
+@class Object
+*/
 	defineProperties(ObjectPrototype, {
 		/**
 		 * Loops through all properties in the object.  Equivalent to Array.forEach.
@@ -266,6 +248,10 @@ Pollyfils for often used functionality for objects
 		});
 		return m;
 	};
+/**
+Pollyfils for often used functionality for Function
+@class Function
+*/
 
 	defineProperties(Function.prototype, {
 		/**
@@ -274,20 +260,70 @@ Pollyfils for often used functionality for objects
 		 *
 		 * @method mergePrototypes
 		 * @param map {Object} Hash map of properties to add to the prototype of this object
-		 * @param forceAssign {Boolean}  If true, it will override any existing property by the same name
+		 * @param keepOriginal {Boolean}  If true, overriding function will 
+		 
+		 
+		 the function will override the original function but will be able to callit will override any existing property by the same name
 		 * @chainable
 		 */
-		mergePrototypes: function (map, forceAssign) {
-			defineProperties(this.prototype, map, forceAssign);
+		mergePrototypes: function (map, keepOriginal) {
+			var proto = this.prototype;
+			
+			if (keepOriginal) {
+				var names = Object.keys(map),
+					l = names.length,
+					i = -1,
+					name;
+				while (++i < l) {
+					name = names[i];
+					if (typeof proto[name] === 'function') {
+						/*jshint -W083 */
+						proto[name] = function(original) {
+							return function () {
+								return map[name].apply(this, [original].concat(Array.prototype.slice.call(arguments,0)));
+							};
+						}(proto[name]);
+						/*jshint +W083 */
+/*
+Mithril.render = function () {
+	// This is the monkey-patching part:
+	return function () {
+
+		var result = original.apply(this, arguments);
+		mock.html = mock.window.document.body.childNodes.reduce(function (prev, node) {
+			return prev + logNode(node);
+		}, '');
+		return result;
+	};
+})(Mithril.render);
+*/
+						
+					} else {
+						defineProperty(proto, name, map[name]);
+					}
+				}
+			} else {
+				defineProperties(proto, map);
+			}
 			return this;
 		},
+		/*
+		m.render = function (original) {
+			return function () {
+
+				var result = original.apply(this, arguments);
+		
+				return result;
+			};
+		})(Mithril.render);
+		*/
 		/**
 		 * Returns a newly created class inheriting from this class
 		 * using the given `constructor` with the
 		 * prototypes listed in `prototypes` merged in.
 		 *
 		 *
-		 * The newly created class has the `superclass` static property
+		 * The newly created class has the `super` static property
 		 * available to access all of is ancestor's instance methods.
 		 *
 		 * Further methods can be added via the [mergePrototypes](#method_mergePrototypes).
@@ -297,7 +333,7 @@ Pollyfils for often used functionality for objects
 		 * 	var Circle = Shape.subClass(
 		 * 		function (x, y, r) {
 		 * 			this.r = r;
-		 * 			Circle.superclass.constructor.call(this, x, y);
+		 * 			Circle.super.constructor.call(this, x, y);
 		 * 		},
 		 * 		{
 		 * 			area: function () {
@@ -313,14 +349,6 @@ Pollyfils for often used functionality for objects
 		 * @return the new class.
 		 */
 		subClass: function (constructor, prototypes) {
-			var create = function () {
-				function F() {}
-
-				return function (obj) {
-					F.prototype = obj;
-					return new F();
-				};
-			}();
 
 			if ((arguments.length === 1) && (typeof constructor !== 'function')) {
 				prototypes = constructor;
@@ -335,20 +363,16 @@ Pollyfils for often used functionality for objects
 			}(this);
 
 
-			var baseProt = this.prototype || Function.prototype,
-				rp = create(baseProt);
+			var baseProt = this.prototype,
+				rp = Object.create(baseProt);
 			constructor.prototype = rp;
 
 			rp.constructor = constructor;
-			constructor.superclass = baseProt;
+			constructor.super = baseProt;
 
-			// assign constructor property
-			if (this != Object && baseProt.constructor == Object.prototype.constructor) {
-				baseProt.constructor = this;
-			}
 			// add prototype overrides
 			if (prototypes) {
-				constructor.mergePrototypes(prototypes, true);
+				defineProperties(constructor.prototype, prototypes, true);
 			}
 
 			return constructor;
@@ -389,7 +413,16 @@ Pollyfils for often used functionality for objects
 			);
 		}
 	});
+	/**
+	Returns a base class with the given constructor and prototype methods
+	
+	@for Object
+	@method createClass
+	@param [constructor] {Function} constructor for the class
+	@param [prototype] {Object} Hash map of prototype members of the new class
+	@return {Function} the new class
+	*/
 	defineProperty(Object, 'createClass', function (constructor, prototype) {
-		return Function.prototype.subClass(constructor, prototype);
+		return Function.prototype.subClass.apply(this, arguments);
 	});
 })();

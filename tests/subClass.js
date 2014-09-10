@@ -27,7 +27,7 @@ var Shape = Object.createClass(function (x, y) {
 var Circle = Shape.subClass(
 	function (x, y, r) {
 		this.r = r || 1;
-		Circle.superclass.constructor.call(this, x, y);
+		Circle.super.constructor.call(this, x, y);
 	},{
 		area: function () {
 			return this.r * this.r * Math.PI;
@@ -79,5 +79,146 @@ describe('Circle', function () {
 		it('method of the new class', function () {
 			expect(c.area()).be.closeTo(28.274, 0.001);
 		});
+	});
+});
+describe('With no constructor:', function () {
+	var P = Object.createClass({
+			twice: function (v) {
+				return 2 * v;
+			}
+		});
+	it('base class', function () {
+		var p = new P();
+		expect(p.twice(3)).eql(6);
+	});
+	it('inherited class', function () {
+		var Q = P.subClass({
+				square: function (v) {
+					return v * v;
+				},
+				times4: function (v) {
+					return Q.super.twice(Q.super.twice(v));
+				}
+			}), 
+			q = new Q();
+		expect(q.square(5)).eql(25);
+		expect(q.times4(4)).eql(16);
+	});
+});
+describe('Multiple levels', function () {
+	var A = Object.createClass(
+		function (a) {
+			this.a = a;
+		},
+		{
+			add: function (b) {
+				this.a += b;
+			}
+		}
+	);
+	var B = A.subClass(
+		function (b) {
+			this.b = b;
+			B.super.constructor.call(this, b);
+		},
+		{
+			add: function (c) {
+				B.super.add.call(this, c * 2);
+			}
+		}
+	);
+	var C = B.subClass(
+		function (c) {
+			this.c = c;
+			C.super.constructor.call(this, c);
+		},
+		{
+			add: function (c) {
+				C.super.add.call(this, c * 3);
+			}
+		}
+	);
+	it ('one level', function () {
+		var a = new A(3);
+		expect(a.a).eql(3);
+		a.add(2);
+		expect(a.a).eql(5);
+	});
+	it ('two levels', function () {
+		
+		var b = new B(3);
+		expect(b.a).eql(3);
+		expect(b.b).eql(3);
+		b.add(2);
+		expect(b.a).eql(7);
+		
+		// Later classes should not interfer with the previous
+		var a = new A(3);
+		expect(a.a).eql(3);
+		expect(a.b).undefined;
+		a.add(2);
+		expect(a.a).eql(5);
+	});
+	it ('three levels', function () {
+		var c = new C(3);
+		expect(c.a).eql(3);
+		expect(c.b).eql(3);
+		expect(c.c).eql(3);
+		c.add(2);
+		expect(c.a).eql(15);
+		
+		// Later classes should not interfer with the previous
+		var b = new B(3);
+		expect(b.a).eql(3);
+		expect(b.b).eql(3);
+		expect(b.c).undefined;
+		b.add(2);
+		expect(b.a).eql(7);
+		
+		// Later classes should not interfer with the previous
+		var a = new A(3);
+		expect(a.a).eql(3);
+		expect(a.b).undefined;
+		expect(a.c).undefined;
+		a.add(2);
+		expect(a.a).eql(5);
+	});
+});
+describe('mergePrototypes', function () {
+	var obj = {a:1, b:2, c:3};
+	it('new empty class', function () {
+		var ClassA = Object.createClass(),
+			a = new ClassA();
+		ClassA.mergePrototypes(obj);
+		expect(a.b).be.eql(2);
+		expect(a.hasOwnProperty('b')).be.false;
+	});
+	it('existing class',  function () {
+		var ClassA = Object.createClass(null, {b: 42}),
+			a = new ClassA();
+		ClassA.mergePrototypes(obj);
+		expect(a.b).be.eql(42);
+		expect(a.hasOwnProperty('b')).be.false;
+	});
+	
+	it('existing class, override',  function () {
+		var ClassA = Object.createClass({
+			b: 'a',
+			whatever: function (v) {
+				expect(this.b).eql('a');
+				expect(v).eql('ec');
+				return this.b + v;
+			}
+		}).mergePrototypes({
+			b:99,
+			whatever: function(original, v) {
+				return original.call(this, v + 'c') + 'd';
+			}
+		},true);
+		
+		
+		var a = new ClassA();
+		expect(a.b).be.eql('a');
+		expect(a.whatever('e')).eql('aecd');
 	});
 });

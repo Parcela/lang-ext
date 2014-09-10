@@ -54,6 +54,9 @@ describe('Testing object instance methods', function () {
 		expect(obj.map(function (value, key) {
 			return key + value;
 		})).be.eql({a:'a1',b:'b2',c:'c3'});
+		expect(obj.map(function (value, key) {
+			return (key == 'b'?undefined:key + value);
+		})).be.eql({a:'a1', c:'c3'});
 	});
 	it('shallowClone', function () {
 		var a = obj.shallowClone();
@@ -79,29 +82,12 @@ describe('Testing object instance methods', function () {
 			a.merge(obj, true);
 			expect(a).be.eql(obj);
 		});
-	});
-	describe('mergePrototypes', function () {
-		it('new empty class', function () {
-			var ClassA = Object.createClass(),
-			    a = new ClassA();
-			ClassA.mergePrototypes(obj);
-			expect(a.b).be.eql(2);
-			expect(a.hasOwnProperty('b')).be.false;
+		it('undefined source', function () {
+			var a = {b:42};
+			a.merge(undefined);
+			expect(a).eql({b:42});
 		});
-		it('existing class, not forced',  function () {
-			var ClassA = Object.createClass(null, {b: 42}),
-			    a = new ClassA();
-			ClassA.mergePrototypes(obj);
-			expect(a.b).be.eql(42);
-			expect(a.hasOwnProperty('b')).be.false;
-		});
-		it('existing class, forced',  function () {
-			var ClassA = Object.createClass(null, {b: 42}),
-			    a = new ClassA();
-			ClassA.mergePrototypes(obj, true);
-			expect(a.b).be.eql(2);
-			expect(a.hasOwnProperty('b')).be.false;
-		});
+			
 	});
 	describe('Object.merge', function () {
 		it('should mix them up, b should not be overwritten', function () {
