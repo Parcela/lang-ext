@@ -11,8 +11,8 @@ Pollyfils for often used functionality for objects and Functions
 
 	// Define configurable, writable and non-enumerable props
 	// if they don't exist.
-	var defineProperty = function (object, name, method, forceAssign) {
-		if (!forceAssign && (name in object)) {
+	var defineProperty = function (object, name, method, force) {
+		if (!force && (name in object)) {
 			return;
 		}
 		Object.defineProperty(object, name, {
@@ -22,14 +22,14 @@ Pollyfils for often used functionality for objects and Functions
 			value: method
 		});
 	};
-	var defineProperties = function (object, map, forceAssign) {
+	var defineProperties = function (object, map, force) {
 		var names = Object.keys(map),
 			l = names.length,
 			i = -1,
 			name;
 		while (++i < l) {
 			name = names[i];
-			defineProperty(object, name, map[name], forceAssign);
+			defineProperty(object, name, map[name], force);
 		}
 	};
 	// -------------------
@@ -206,14 +206,14 @@ Pollyfils for often used functionality for objects
 		 *
 		 * @method merge
 		 * @param obj {Object} Object with the properties to be added to the original object
-		 * @param forceAssign {Boolean} If true, the properties in `obj` will override those of the same name
+		 * @param force {Boolean} If true, the properties in `obj` will override those of the same name
 		 *        in the original object
 		 * @chainable
 		 */
-		merge: function (obj, forceAssign) {
+		merge: function (obj, force) {
 			var m = this;
 			if (obj && obj.each) obj.each(function (value, key) {
-				if (forceAssign || !(key in m)) {
+				if (force || !(key in m)) {
 					m[key] = obj[key];
 				}
 			});
@@ -256,74 +256,49 @@ Pollyfils for often used functionality for Function
 	defineProperties(Function.prototype, {
 		/**
 		 * Merges the given map of properties into the `prototype` of the Class.
-		 * Not to be used on instances.
+		 * **Not** to be used on instances.
+		 *
+		 * The members in the hash map will become members with
+		 * instances of the merged class.
+		 *
+		 * By default, this method will not override existing prototype members, 
+		 * unless the second argument `force` is true.
+		 *
+		 * When the replaced member is a function, the original version is 
+		 * preserved in the `$orig` (original) static property
+		 * and can be called from the overriding method. If the same method is overriden more than once
+		 * only the last one will be kept.
 		 *
 		 * @method mergePrototypes
 		 * @param map {Object} Hash map of properties to add to the prototype of this object
-		 * @param keepOriginal {Boolean}  If true, overriding function will 
-		 
-		 
-		 the function will override the original function but will be able to callit will override any existing property by the same name
+		 * @param force {Boolean}  If true, existing members will be overwritten
 		 * @chainable
 		 */
-		mergePrototypes: function (map, keepOriginal) {
+		mergePrototypes: function (map, force) {
 			var proto = this.prototype;
 			
-			if (keepOriginal) {
-				var names = Object.keys(map),
-					l = names.length,
-					i = -1,
-					name;
-				while (++i < l) {
-					name = names[i];
-					if (typeof proto[name] === 'function') {
-						/*jshint -W083 */
-						proto[name] = function(original) {
-							return function () {
-								return map[name].apply(this, [original].concat(Array.prototype.slice.call(arguments,0)));
-							};
-						}(proto[name]);
-						/*jshint +W083 */
-/*
-Mithril.render = function () {
-	// This is the monkey-patching part:
-	return function () {
-
-		var result = original.apply(this, arguments);
-		mock.html = mock.window.document.body.childNodes.reduce(function (prev, node) {
-			return prev + logNode(node);
-		}, '');
-		return result;
-	};
-})(Mithril.render);
-*/
-						
-					} else {
-						defineProperty(proto, name, map[name]);
-					}
+			var names = Object.keys(map || {}),
+				l = names.length,
+				i = -1,
+				name;
+			while (++i < l) {
+				name = names[i];
+				if (!force && name in proto) continue;
+				
+				if (typeof proto[name] === 'function') {
+					this.$orig[name] = proto[name];
 				}
-			} else {
-				defineProperties(proto, map);
+				proto[name] = map[name];
 			}
 			return this;
 		},
-		/*
-		m.render = function (original) {
-			return function () {
-
-				var result = original.apply(this, arguments);
-		
-				return result;
-			};
-		})(Mithril.render);
-		*/
 		/**
 		 * Returns a newly created class inheriting from this class
 		 * using the given `constructor` with the
 		 * prototypes listed in `prototypes` merged in.
 		 *
 		 *
-		 * The newly created class has the `super` static property
+		 * The newly created class has the `$super` static property
 		 * available to access all of is ancestor's instance methods.
 		 *
 		 * Further methods can be added via the [mergePrototypes](#method_mergePrototypes).
@@ -333,7 +308,7 @@ Mithril.render = function () {
 		 * 	var Circle = Shape.subClass(
 		 * 		function (x, y, r) {
 		 * 			this.r = r;
-		 * 			Circle.super.constructor.call(this, x, y);
+		 * 			Circle.$super.constructor.call(this, x, y);
 		 * 		},
 		 * 		{
 		 * 			area: function () {
@@ -368,13 +343,11 @@ Mithril.render = function () {
 			constructor.prototype = rp;
 
 			rp.constructor = constructor;
-			constructor.super = baseProt;
+			constructor.$super = baseProt;
+			constructor.$orig = {};
 
 			// add prototype overrides
-			if (prototypes) {
-				defineProperties(constructor.prototype, prototypes, true);
-			}
-
+			constructor.mergePrototypes(prototypes, true);
 			return constructor;
 		},
 

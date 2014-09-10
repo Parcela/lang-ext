@@ -27,7 +27,7 @@ var Shape = Object.createClass(function (x, y) {
 var Circle = Shape.subClass(
 	function (x, y, r) {
 		this.r = r || 1;
-		Circle.super.constructor.call(this, x, y);
+		Circle.$super.constructor.call(this, x, y);
 	},{
 		area: function () {
 			return this.r * this.r * Math.PI;
@@ -97,7 +97,7 @@ describe('With no constructor:', function () {
 					return v * v;
 				},
 				times4: function (v) {
-					return Q.super.twice(Q.super.twice(v));
+					return Q.$super.twice(Q.$super.twice(v));
 				}
 			}), 
 			q = new Q();
@@ -119,22 +119,22 @@ describe('Multiple levels', function () {
 	var B = A.subClass(
 		function (b) {
 			this.b = b;
-			B.super.constructor.call(this, b);
+			B.$super.constructor.call(this, b);
 		},
 		{
 			add: function (c) {
-				B.super.add.call(this, c * 2);
+				B.$super.add.call(this, c * 2);
 			}
 		}
 	);
 	var C = B.subClass(
 		function (c) {
 			this.c = c;
-			C.super.constructor.call(this, c);
+			C.$super.constructor.call(this, c);
 		},
 		{
 			add: function (c) {
-				C.super.add.call(this, c * 3);
+				C.$super.add.call(this, c * 3);
 			}
 		}
 	);
@@ -210,9 +210,8 @@ describe('mergePrototypes', function () {
 				return this.b + v;
 			}
 		}).mergePrototypes({
-			b:99,
-			whatever: function(original, v) {
-				return original.call(this, v + 'c') + 'd';
+			whatever: function(v) {
+				return ClassA.$orig.whatever.call(this, v + 'c') + 'd';
 			}
 		},true);
 		
@@ -221,4 +220,30 @@ describe('mergePrototypes', function () {
 		expect(a.b).be.eql('a');
 		expect(a.whatever('e')).eql('aecd');
 	});
+	it('Two level inheritance each with plugin', function () {
+		var ClassA = Object.createClass({
+			method: function (a) {
+				return a + 'a';
+			}
+		}).mergePrototypes({
+			method: function (b) {
+				return ClassA.$orig.method(b) + 'b';
+			}
+		}, true);
+		var ClassB = ClassA.subClass({
+			method: function (c) {
+				return ClassB.$super.method(c) + 'c';
+			}
+		}).mergePrototypes({
+			method: function (d) {
+				return ClassB.$orig.method(d) + 'd';
+			}
+		}, true);
+		
+		var b = new ClassB();
+		expect(b.method('0')).eql('0abcd');
+		var a = new ClassA();
+		expect(a.method('1')).eql('1ab');
+	});
+			
 });
