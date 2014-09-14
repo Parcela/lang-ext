@@ -286,11 +286,23 @@ Pollyfils for often used functionality for Function
 				if (!force && name in proto) continue;
 				
 				if (typeof proto[name] === 'function') {
-					this.$orig[name] = proto[name];
+					/* jshint -W083 */
+					proto[name] = (function (original) {
+						return function () {
+							/*jshint +W083 */
+							var a = Array.prototype.slice.call(arguments, 0);
+							a.unshift(original || function () {});
+							return map[name].apply(this, a);
+						};
+					})(proto[name]);
+				} else {
+					proto[name] = map[name];
 				}
-				proto[name] = map[name];
+				
+						
 			}
 			return this;
+			
 		},
 		/**
 		 * Returns a newly created class inheriting from this class
@@ -347,7 +359,12 @@ Pollyfils for often used functionality for Function
 			constructor.$orig = {};
 
 			// add prototype overrides
-			constructor.mergePrototypes(prototypes, true);
+			
+			if (prototypes) {
+				prototypes.each(function (method, name) {
+					constructor.prototype[name] = method;
+				});
+			}
 			return constructor;
 		},
 

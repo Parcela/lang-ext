@@ -210,8 +210,8 @@ describe('mergePrototypes', function () {
 				return this.b + v;
 			}
 		}).mergePrototypes({
-			whatever: function(v) {
-				return ClassA.$orig.whatever.call(this, v + 'c') + 'd';
+			whatever: function(orig, v) {
+				return orig.call(this, v + 'c') + 'd';
 			}
 		},true);
 		
@@ -226,8 +226,8 @@ describe('mergePrototypes', function () {
 				return a + 'a';
 			}
 		}).mergePrototypes({
-			method: function (b) {
-				return ClassA.$orig.method(b) + 'b';
+			method: function (orig, b) {
+				return orig(b) + 'b';
 			}
 		}, true);
 		var ClassB = ClassA.subClass({
@@ -235,8 +235,8 @@ describe('mergePrototypes', function () {
 				return ClassB.$super.method(c) + 'c';
 			}
 		}).mergePrototypes({
-			method: function (d) {
-				return ClassB.$orig.method(d) + 'd';
+			method: function (orig, d) {
+				return orig(d) + 'd';
 			}
 		}, true);
 		
@@ -244,6 +244,39 @@ describe('mergePrototypes', function () {
 		expect(b.method('0')).eql('0abcd');
 		var a = new ClassA();
 		expect(a.method('1')).eql('1ab');
+	});
+	it('Two level inheritance each with two plugins each', function () {
+		var ClassA = Object.createClass({
+			method: function (a) {
+				return a + 'a';
+			}
+		}).mergePrototypes({
+			method: function (orig, b) {
+				return orig(b) + 'b';
+			}
+		}, true).mergePrototypes({
+			method: function (orig, b) {
+				return orig(b) + 'B';
+			}
+		}, true);
+		var ClassB = ClassA.subClass({
+			method: function (c) {
+				return ClassB.$super.method(c) + 'c';
+			}
+		}).mergePrototypes({
+			method: function (orig, d) {
+				return orig(d) + 'd';
+			}
+		}, true).mergePrototypes({
+			method: function (orig, d) {
+				return orig(d) + 'D';
+			}
+		}, true);
+		
+		var b = new ClassB();
+		expect(b.method('0')).eql('0abBcdD');
+		var a = new ClassA();
+		expect(a.method('1')).eql('1abB');
 	});
 			
 });
