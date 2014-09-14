@@ -32,6 +32,7 @@ Pollyfils for often used functionality for objects and Functions
 			defineProperty(object, name, map[name], force);
 		}
 	};
+	var NOOP = function () {};
 	// -------------------
 	var _each = function (obj, fn, context) {
 		var keys = Object.keys(obj),
@@ -264,10 +265,10 @@ Pollyfils for often used functionality for Function
 		 * By default, this method will not override existing prototype members, 
 		 * unless the second argument `force` is true.
 		 *
-		 * When the replaced member is a function, the original version is 
-		 * preserved in the `$orig` (original) static property
-		 * and can be called from the overriding method. If the same method is overriden more than once
-		 * only the last one will be kept.
+		 * When `force` is true and the replacement is a function, 
+		 * the original method is prepended to the list of arguments of the new method.
+		 * It is the responsibility of the developer to call the original 
+		 * to preserve the inheritance chain.
 		 *
 		 * @method mergePrototypes
 		 * @param map {Object} Hash map of properties to add to the prototype of this object
@@ -285,13 +286,13 @@ Pollyfils for often used functionality for Function
 				name = names[i];
 				if (!force && name in proto) continue;
 				
-				if (typeof proto[name] === 'function') {
+				if (typeof map[name] === 'function') {
 					/* jshint -W083 */
 					proto[name] = (function (original) {
 						return function () {
 							/*jshint +W083 */
 							var a = Array.prototype.slice.call(arguments, 0);
-							a.unshift(original || function () {});
+							a.unshift(original || NOOP);
 							return map[name].apply(this, a);
 						};
 					})(proto[name]);

@@ -278,5 +278,19 @@ describe('mergePrototypes', function () {
 		var a = new ClassA();
 		expect(a.method('1')).eql('1abB');
 	});
+	it('orig present even if no original', function (){
+		var ClassA = Object.createClass({
+		}).mergePrototypes({
+			method: function (orig, b) {
+				return orig(b) + 'b';
+			}
+		}, true).mergePrototypes({
+			method: function (orig, b) {
+				return orig(b) + 'B';
+			}
+		}, true);
+		var a = new ClassA();
+		expect(a.method('1')).eql('undefinedbB');
+	});
 			
 });
