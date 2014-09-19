@@ -200,6 +200,28 @@ describe('mergePrototypes', function () {
 		expect(a.b).be.eql(42);
 		expect(a.hasOwnProperty('b')).be.false;
 	});
+	it ('existing class, overwriting', function () {
+		var ClassA = Object.createClass({
+			b: 'a',
+			whatever: function (v) {
+				expect(1, 'should never reach this one').eql(0);
+			}
+		}).mergePrototypes({
+			whatever: function(v) {
+				expect(this.b).eql('a');
+				expect(v).eql('b');
+				return  this.b + v + 'c';
+			}
+		},true);
+		
+		
+		var a = new ClassA();
+		expect(a.b).be.eql('a');
+		expect(a.whatever('b')).eql('abc');
+		
+	});
+});
+describe('patch', function () {
 	
 	it('existing class, override',  function () {
 		var ClassA = Object.createClass({
@@ -209,11 +231,11 @@ describe('mergePrototypes', function () {
 				expect(v).eql('ec');
 				return this.b + v;
 			}
-		}).mergePrototypes({
+		}).patch({
 			whatever: function(orig, v) {
 				return orig.call(this, v + 'c') + 'd';
 			}
-		},true);
+		});
 		
 		
 		var a = new ClassA();
@@ -225,20 +247,20 @@ describe('mergePrototypes', function () {
 			method: function (a) {
 				return a + 'a';
 			}
-		}).mergePrototypes({
+		}).patch({
 			method: function (orig, b) {
 				return orig(b) + 'b';
 			}
-		}, true);
+		});
 		var ClassB = ClassA.subClass({
 			method: function (c) {
 				return ClassB.$super.method(c) + 'c';
 			}
-		}).mergePrototypes({
+		}).patch({
 			method: function (orig, d) {
 				return orig(d) + 'd';
 			}
-		}, true);
+		});
 		
 		var b = new ClassB();
 		expect(b.method('0')).eql('0abcd');
@@ -250,28 +272,28 @@ describe('mergePrototypes', function () {
 			method: function (a) {
 				return a + 'a';
 			}
-		}).mergePrototypes({
+		}).patch({
 			method: function (orig, b) {
 				return orig(b) + 'b';
 			}
-		}, true).mergePrototypes({
+		}).patch({
 			method: function (orig, b) {
 				return orig(b) + 'B';
 			}
-		}, true);
+		});
 		var ClassB = ClassA.subClass({
 			method: function (c) {
 				return ClassB.$super.method(c) + 'c';
 			}
-		}).mergePrototypes({
+		}).patch({
 			method: function (orig, d) {
 				return orig(d) + 'd';
 			}
-		}, true).mergePrototypes({
+		}).patch({
 			method: function (orig, d) {
 				return orig(d) + 'D';
 			}
-		}, true);
+		});
 		
 		var b = new ClassB();
 		expect(b.method('0')).eql('0abBcdD');
@@ -280,15 +302,15 @@ describe('mergePrototypes', function () {
 	});
 	it('orig present even if no original', function (){
 		var ClassA = Object.createClass({
-		}).mergePrototypes({
+		}).patch({
 			method: function (orig, b) {
 				return orig(b) + 'b';
 			}
-		}, true).mergePrototypes({
+		}).patch({
 			method: function (orig, b) {
 				return orig(b) + 'B';
 			}
-		}, true);
+		});
 		var a = new ClassA();
 		expect(a.method('1')).eql('undefinedbB');
 	});

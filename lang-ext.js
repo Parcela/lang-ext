@@ -265,11 +265,6 @@ Pollyfils for often used functionality for Function
 		 * By default, this method will not override existing prototype members, 
 		 * unless the second argument `force` is true.
 		 *
-		 * When `force` is true and the replacement is a function, 
-		 * the original method is prepended to the list of arguments of the new method.
-		 * It is the responsibility of the developer to call the original 
-		 * to preserve the inheritance chain.
-		 *
 		 * @method mergePrototypes
 		 * @param map {Object} Hash map of properties to add to the prototype of this object
 		 * @param force {Boolean}  If true, existing members will be overwritten
@@ -285,22 +280,7 @@ Pollyfils for often used functionality for Function
 			while (++i < l) {
 				name = names[i];
 				if (!force && name in proto) continue;
-				
-				if (typeof map[name] === 'function') {
-					/* jshint -W083 */
-					proto[name] = (function (original) {
-						return function () {
-							/*jshint +W083 */
-							var a = Array.prototype.slice.call(arguments, 0);
-							a.unshift(original || NOOP);
-							return map[name].apply(this, a);
-						};
-					})(proto[name]);
-				} else {
-					proto[name] = map[name];
-				}
-				
-						
+				proto[name] = map[name];
 			}
 			return this;
 			
@@ -359,16 +339,42 @@ Pollyfils for often used functionality for Function
 			constructor.$super = baseProt;
 			constructor.$orig = {};
 
-			// add prototype overrides
-			
-			if (prototypes) {
-				prototypes.each(function (method, name) {
-					constructor.prototype[name] = method;
-				});
-			}
+			constructor.mergePrototypes(prototypes, true);
 			return constructor;
 		},
-
+		/**
+		Overwrites the given prototype functions with the ones given in 
+		the hashmap while still providing a means of calling the original
+		overridden method.
+		
+		The patching function will receive a reference to the original method
+		prepended to the arguments the original would have received.
+		
+		@method patch
+		@param map {Object} Hash map of method names to their new implementation.
+		@chainable
+		*/
+		patch: function (map) {
+			var proto = this.prototype;
+			
+			var names = Object.keys(map || {}),
+				l = names.length,
+				i = -1,
+				name;
+			while (++i < l) {
+				name = names[i];
+				/*jshint -W083 */
+				proto[name] = (function (original) {
+					return function () {
+						/*jshint +W083 */
+						var a = Array.prototype.slice.call(arguments, 0);
+						a.unshift(original || NOOP);
+						return map[name].apply(this, a);
+					};
+				})(proto[name]);
+			}
+			return this;
+		},
 		/**
 		 * Sets the context of which the function will be execute. in the
 		 * supplied object's context, optionally adding any additional
